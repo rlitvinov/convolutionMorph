@@ -63,14 +63,71 @@ void CMyMorphWidget::applyMorph()
 
     QImage newImage(imgSize, QImage::Format_RGB32);
 
-    auto pNewScanline = reinterpret_cast<QRgb*>(newImage.scanLine(0));
-    for (int y = 0, increment = newImage.bytesPerLine() / sizeof(*pNewScanline);
+    typedef decltype(m_kernel)::SRGBColor SColor;
+    const auto MinColor = std::numeric_limits<decltype(SColor::R)>::min();
+    const auto MaxColor = std::numeric_limits<decltype(SColor::R)>::max();
+
+    SColor buf[imgSize.height()][imgSize.width()];
+    const auto bufWidth = imgSize.width();
+
+    SColor minColors{MaxColor, MaxColor, MaxColor};
+    SColor maxColors{MinColor, MinColor, MinColor};
+
+    SColor* pBufScanline = buf[0];
+    for (int y = 0;
             y < imgSize.height();
-            ++y, pNewScanline += increment)
+            ++y, pBufScanline += bufWidth)
     {
         for (int x = 0; x < imgSize.width(); ++x)
         {
-            pNewScanline[x] = m_kernel.apply(x, y, scanlines, imgSize);
+            const auto color = m_kernel.apply(x, y, scanlines, imgSize);
+            pBufScanline[x] = color;
+
+            minColors.R = std::min(minColors.R, color.R);
+            maxColors.R = std::max(maxColors.R, color.R);
+
+            minColors.G = std::min(minColors.G, color.G);
+            maxColors.G = std::max(maxColors.G, color.G);
+
+            minColors.B = std::min(minColors.B, color.B);
+            maxColors.B = std::max(maxColors.B, color.B);
+        }
+    }
+
+    const auto rSpan = maxColors.R - minColors.R;
+    const auto gSpan = maxColors.G - minColors.G;
+    const auto bSpan = maxColors.B - minColors.B;
+
+    const auto rScale = 255.f / rSpan;
+    const auto gScale = 255.f / gSpan;
+    const auto bScale = 255.f / bSpan;
+
+    pBufScanline = buf[0];
+    auto pNewScanline = reinterpret_cast<QRgb*>(newImage.scanLine(0));
+    for (int y = 0, increment = newImage.bytesPerLine() / sizeof(*pNewScanline);
+         y < imgSize.height();
+         ++y, pNewScanline += increment, pBufScanline += bufWidth)
+    {
+        for (int x = 0; x < imgSize.width(); ++x)
+        {
+            auto [r, g, b] = pBufScanline[x];
+
+            if constexpr (NormalizeFrame)
+            {
+                r = (r - minColors.R) * rScale;
+                g = (g - minColors.G) * gScale;
+                b = (b - minColors.B) * bScale;
+            }
+            else
+            {
+                r = std::clamp(r, 0.f, 255.f);
+                g = std::clamp(g, 0.f, 255.f);
+                b = std::clamp(b, 0.f, 255.f);
+            }
+
+            pNewScanline[x] = qRgb(static_cast<int>(r),
+                                static_cast<int>(g),
+                                static_cast<int>(b));
         }
     }
 

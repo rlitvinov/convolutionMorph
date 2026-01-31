@@ -43,17 +43,15 @@ void CMyMorphKernelCrosscolor::mutateMatrix(TMatrixElement strength)
                     [this, &mutationDistrubution](auto& elem){ elem += mutationDistrubution(m_randomEngine); });
 }
 
-QRgb CMyMorphKernelCrosscolor::apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
+CMyMorphKernelCrosscolor::SRGBColor CMyMorphKernelCrosscolor::apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
 {
-    TMatrixElement resR = 0.f;
-    TMatrixElement resG = 0.f;
-    TMatrixElement resB = 0.f;
+    SRGBColor res{0.f, 0.f, 0.f};
 
     {
         const auto color = pScanlines[y][x];
-        resR += qRed(color) - ZeroColor;
-        resG += qGreen(color) - ZeroColor;
-        resB += qBlue(color) - ZeroColor;
+        res.R += qRed(color) - ZeroColor;
+        res.G += qGreen(color) - ZeroColor;
+        res.B += qBlue(color) - ZeroColor;
     }
 
     const int MatrixCenter = MatrixSize / 2;
@@ -81,9 +79,9 @@ QRgb CMyMorphKernelCrosscolor::apply(int x, int y, const TScanlinePointers pScan
 
             const auto color = pScanlines[imY][imX];
             const auto coeff = m_matrix[mY][mX];
-            resR += (qRed(color) - ZeroColor) * coeff;
-            resG += (qGreen(color) - ZeroColor) * coeff;
-            resB += (qBlue(color) - ZeroColor) * coeff;
+            res.R += (qRed(color) - ZeroColor) * coeff;
+            res.G += (qGreen(color) - ZeroColor) * coeff;
+            res.B += (qBlue(color) - ZeroColor) * coeff;
         }
 
     const int CrossColorMatrixCenter = CrossColorMatrixSize / 2;
@@ -110,24 +108,31 @@ QRgb CMyMorphKernelCrosscolor::apply(int x, int y, const TScanlinePointers pScan
                         (imY < imageSize.height()) );
 
             const auto color = pScanlines[imY][imX];
-            const auto coeffLower = m_crossColorMatrix[mY][mX][0];
-            const auto coeffHigher = m_crossColorMatrix[mY][mX][1];
+            const auto coeffLower = m_crossColorMatrix[mY][mX][0] * CrossColorCoupling;
+            const auto coeffHigher = m_crossColorMatrix[mY][mX][1] * CrossColorCoupling;
 
             const auto [r, g, b] = std::make_tuple(qRed(color) - ZeroColor, qGreen(color) - ZeroColor, qBlue(color) - ZeroColor);
 
-            resR += g * coeffLower;
-            resR += b * coeffHigher;
+            res.R += g * coeffLower;
+            res.R += b * coeffHigher;
 
-            resG += b * coeffLower;
-            resG += r * coeffHigher;
+            res.G += b * coeffLower;
+            res.G += r * coeffHigher;
 
-            resB += r * coeffLower;
-            resB += g * coeffHigher;
+            res.B += r * coeffLower;
+            res.B += g * coeffHigher;
         }
 
-    resR += ZeroColor;
-    resG += ZeroColor;
-    resB += ZeroColor;
+    res.R += ZeroColor;
+    res.G += ZeroColor;
+    res.B += ZeroColor;
+
+    return res;
+}
+
+QRgb CMyMorphKernelCrosscolor::applyWithClamp(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
+{
+    auto [resR, resG, resB] = apply(x, y, pScanlines, imageSize);
 
     resR = std::clamp(resR, 0.f, 255.f);
     resG = std::clamp(resG, 0.f, 255.f);

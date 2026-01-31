@@ -9,8 +9,9 @@ class CMyMorphKernelCrosscolor
 {
     typedef float TMatrixElement;
 
-    static const size_t MatrixSize = 3;
-    static const size_t CrossColorMatrixSize = 5;
+    static const size_t MatrixSize = 5;
+    static const size_t CrossColorMatrixSize = 3;
+    constexpr static const TMatrixElement CrossColorCoupling = 0.1f;
     constexpr static const TMatrixElement MatrixElementMin = -0.1f;
     constexpr static const TMatrixElement MatrixElementMax = 0.1f;
 
@@ -23,6 +24,13 @@ class CMyMorphKernelCrosscolor
     typedef TMatrixElement TCrossColorMatrix[CrossColorMatrixSize][CrossColorMatrixSize][2];
 
 public:
+    struct SRGBColor
+    {
+        TMatrixElement R;
+        TMatrixElement G;
+        TMatrixElement B;
+    };
+
     typedef QRgb* TScanlinePointers[];
 
     CMyMorphKernelCrosscolor();
@@ -31,7 +39,8 @@ public:
     void randomizeMatrix();
     void mutateMatrix(TMatrixElement strength);
 
-    QRgb apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
+    SRGBColor apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
+    QRgb applyWithClamp(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
 
 private:
     TMatrix m_matrix;
