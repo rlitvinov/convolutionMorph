@@ -9,8 +9,8 @@ class CMyMorphKernelCrosscolor
 {
     typedef float TMatrixElement;
 
-    static const size_t MatrixSize = 5;
-    static const size_t CrossColorMatrixSize = 3;
+    static const size_t MatrixSize = 7;
+    static const size_t CrossColorMatrixSize = 5;
     constexpr static const TMatrixElement CrossColorCoupling = 0.1f;
     constexpr static const TMatrixElement MatrixElementMin = -0.1f;
     constexpr static const TMatrixElement MatrixElementMax = 0.1f;
@@ -43,8 +43,13 @@ public:
     QRgb applyWithClamp(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
 
 private:
+    void updateMatrices();
+
     TMatrix m_matrix;
     TCrossColorMatrix m_crossColorMatrix;
+
+    TMatrix m_rawMatrix;
+    TCrossColorMatrix m_rawCrossColorMatrix;
 
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<TMatrixElement> m_randomDistrubution;

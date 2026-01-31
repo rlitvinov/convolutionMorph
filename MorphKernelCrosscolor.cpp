@@ -10,37 +10,43 @@ CMyMorphKernelCrosscolor::CMyMorphKernelCrosscolor()
 
 void CMyMorphKernelCrosscolor::setTrivialMatrix()
 {
-    std::fill(  &m_matrix[0][0],
-                &m_matrix[0][0] + sizeof(m_matrix) / sizeof(m_matrix[0][0]),
+    std::fill(  &m_rawMatrix[0][0],
+                &m_rawMatrix[0][0] + sizeof(m_rawMatrix) / sizeof(m_rawMatrix[0][0]),
                 TMatrixElement(0.f));
 
-    std::fill(  &m_crossColorMatrix[0][0][0],
-                &m_crossColorMatrix[0][0][0] + sizeof(m_crossColorMatrix) / sizeof(m_crossColorMatrix[0][0][0]),
+    std::fill(  &m_rawCrossColorMatrix[0][0][0],
+                &m_rawCrossColorMatrix[0][0][0] + sizeof(m_rawCrossColorMatrix) / sizeof(m_rawCrossColorMatrix[0][0][0]),
                 TMatrixElement(0.f));
+
+    updateMatrices();
 }
 
 void CMyMorphKernelCrosscolor::randomizeMatrix()
 {
-    std::generate(  &m_matrix[0][0],
-                    &m_matrix[0][0] + sizeof(m_matrix) / sizeof(m_matrix[0][0]),
+    std::generate(  &m_rawMatrix[0][0],
+                    &m_rawMatrix[0][0] + sizeof(m_rawMatrix) / sizeof(m_rawMatrix[0][0]),
                     [this](){ return m_randomDistrubution(m_randomEngine); });
 
-    std::generate(  &m_crossColorMatrix[0][0][0],
-                    &m_crossColorMatrix[0][0][0] + sizeof(m_crossColorMatrix) / sizeof(m_crossColorMatrix[0][0][0]),
+    std::generate(  &m_rawCrossColorMatrix[0][0][0],
+                    &m_rawCrossColorMatrix[0][0][0] + sizeof(m_rawCrossColorMatrix) / sizeof(m_rawCrossColorMatrix[0][0][0]),
                     [this](){ return m_randomDistrubution(m_randomEngine); });
+
+    updateMatrices();
 }
 
 void CMyMorphKernelCrosscolor::mutateMatrix(TMatrixElement strength)
 {
     std::uniform_real_distribution<TMatrixElement> mutationDistrubution(-strength, strength);
 
-    std::for_each(  &m_matrix[0][0],
-                    &m_matrix[0][0] + sizeof(m_matrix) / sizeof(m_matrix[0][0]),
+    std::for_each(  &m_rawMatrix[0][0],
+                    &m_rawMatrix[0][0] + sizeof(m_rawMatrix) / sizeof(m_rawMatrix[0][0]),
                     [this, &mutationDistrubution](auto& elem){ elem += mutationDistrubution(m_randomEngine); });
 
-    std::for_each(  &m_crossColorMatrix[0][0][0],
-                    &m_crossColorMatrix[0][0][0] + sizeof(m_crossColorMatrix) / sizeof(m_crossColorMatrix[0][0][0]),
+    std::for_each(  &m_rawCrossColorMatrix[0][0][0],
+                    &m_rawCrossColorMatrix[0][0][0] + sizeof(m_rawCrossColorMatrix) / sizeof(m_rawCrossColorMatrix[0][0][0]),
                     [this, &mutationDistrubution](auto& elem){ elem += mutationDistrubution(m_randomEngine); });
+
+    updateMatrices();
 }
 
 CMyMorphKernelCrosscolor::SRGBColor CMyMorphKernelCrosscolor::apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
@@ -141,4 +147,38 @@ QRgb CMyMorphKernelCrosscolor::applyWithClamp(int x, int y, const TScanlinePoint
     return qRgb(static_cast<int>(resR),
                 static_cast<int>(resG),
                 static_cast<int>(resB));
+}
+
+void CMyMorphKernelCrosscolor::updateMatrices()
+{
+    constexpr int MatrixCenter = MatrixSize / 2;
+    for (int y = 0; y < MatrixSize; ++y)
+    {
+        const auto yCoord = y - MatrixCenter;
+        for (int x = 0; x < MatrixSize; ++x)
+        {
+            const auto xCoord = x - MatrixCenter;
+            const auto distSquared = xCoord*xCoord + yCoord*yCoord;
+            const auto adjustedValue = m_rawMatrix[y][x] / std::sqrt(distSquared + 1);
+            m_matrix[y][x] = adjustedValue;
+        }
+    }
+
+    constexpr int CrossColorMatrixCenter = CrossColorMatrixSize / 2;
+    for (int y = 0; y < CrossColorMatrixSize; ++y)
+    {
+        const auto yCoord = y - CrossColorMatrixCenter;
+        for (int x = 0; x < CrossColorMatrixSize; ++x)
+        {
+            const auto xCoord = x - CrossColorMatrixCenter;
+            const auto distSquared = xCoord*xCoord + yCoord*yCoord;
+
+            const auto adjustedValue0 = m_rawCrossColorMatrix[y][x][0] / std::sqrt(distSquared + 1);
+            const auto adjustedValue1 = m_rawCrossColorMatrix[y][x][1] / std::sqrt(distSquared + 1);
+
+            m_crossColorMatrix[y][x][0] = adjustedValue0;
+            m_crossColorMatrix[y][x][1] = adjustedValue1;
+        }
+    }
+
 }

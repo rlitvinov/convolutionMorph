@@ -59,7 +59,7 @@ protected:
     virtual void paintEvent(QPaintEvent* event) override;
 
 private:
-    constexpr static const float MutationStrength = 0.0003f;
+    constexpr static const float MutationStrength = 0.003f;
     constexpr static const bool NormalizeFrame = false; // If true then each frame will be scaled to 0-255 range, otherwise it will be clamped to this range
 
     QImage m_image;
