@@ -1,6 +1,7 @@
 #include "MorphWidget.h"
 
 #include <QPainter>
+#include <QPainterPath>
 
 using namespace Qt::StringLiterals;
 
@@ -233,9 +234,36 @@ void CMyMorphWidget::paintEvent(QPaintEvent* e)
     QMutexLocker pixmapLocker(&m_currentPixmapMutex);
     const auto imgSize = m_currentPixmap.size();
     painter.drawPixmap(0, 0, imgSize.width() * 2, imgSize.height() * 2, m_currentPixmap);
+
+    {
+        auto font = painter.font();
+        font.setPixelSize(FPSFontSize);
+        QPainterPath path;
+        font.setBold(true);
+        path.addText(FPSOffset, font, m_fps);
+        painter.setPen(FPSOutlineColor);
+        painter.setBrush(FPSTextColor);
+        painter.drawPath(path);
+    }
+
+    if (const auto curTime = QTime::currentTime(); m_fpsTimeStamp.isNull())
+    {
+        m_fpsTimeStamp = curTime;
+    }
+    else
+    {
+        if (const auto msecsFromTimeStamp = m_fpsTimeStamp.msecsTo(curTime); msecsFromTimeStamp >= FPSRefreshIntervalMSecs)
+        {
+            auto fps = m_framesSinceTimeStamp * static_cast<double>(FPSRefreshIntervalMSecs) / msecsFromTimeStamp;
+            m_fps = u"FPS: "_s + QString::number(fps, 'g', 3);
+
+            m_fpsTimeStamp = curTime;
+            m_framesSinceTimeStamp = 0;
+        }
+    }
+
+    ++m_framesSinceTimeStamp;
 }
-
-
 
 void CWorkerThread::run()
 {

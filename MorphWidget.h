@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QMutex>
 #include <QThread>
+#include <QTime>
 
 class CMyMorphWidget;
 
@@ -63,6 +64,12 @@ private:
     constexpr static const float MutationStrength = 0.001f;
     constexpr static const bool NormalizeFrame = false; // If true then each frame will be scaled to 0-255 range, otherwise it will be clamped to this range
 
+    constexpr static const auto FPSFontSize = 30;
+    constexpr static const QPoint FPSOffset{10, 30};
+    constexpr static const auto FPSTextColor = Qt::green;
+    constexpr static const auto FPSOutlineColor = Qt::red;
+    constexpr static const auto FPSRefreshIntervalMSecs = 1000;
+
     QImage m_image;
     QMutex m_imageMutex;
 
@@ -79,6 +86,10 @@ private:
 
     std::mt19937 m_randomEngine;
     std::uniform_int_distribution<unsigned short> m_randomDistrubution;
+
+    QTime m_fpsTimeStamp;
+    int m_framesSinceTimeStamp = 0;
+    QString m_fps;
 };
 
 #endif // MORPHWIDGET_H
