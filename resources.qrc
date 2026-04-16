@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>testFrame.jpeg</file>
+    </qresource>
+</RCC>

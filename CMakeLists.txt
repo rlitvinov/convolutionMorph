@@ -19,6 +19,17 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+
+        MorphKernel.cpp
+        MorphKernel.h
+        MorphKernelCrosscolor.cpp
+        MorphKernelCrosscolor.h
+        MorphKernelCrosscolorSplitColor.cpp
+        MorphKernelCrosscolorSplitColor.h
+        MorphWidget.cpp
+        MorphWidget.h
+
+        resources.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -40,12 +51,6 @@ else()
     else()
         add_executable(PicMorph
             ${PROJECT_SOURCES}
-            MorphWidget.h MorphWidget.cpp
-            MorphKernel.h MorphKernel.cpp
-            MorphKernelCrosscolor.cpp
-            MorphKernelCrosscolor.h
-
-
         )
     endif()
 endif()

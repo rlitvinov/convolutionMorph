@@ -2,16 +2,18 @@
 
 #include <QPainter>
 
+using namespace Qt::StringLiterals;
+
 CMyMorphWidget::CMyMorphWidget(QWidget *parent)
     : QWidget{parent}
-    , m_filename("/home/lrni/testFrame.jpeg")
+    , m_filename(u":/testFrame.jpeg"_s)
     , m_workerThread(this)
     , m_randomDistrubution(std::numeric_limits<unsigned char>::min(), std::numeric_limits<unsigned char>::max())
     , m_randomEngine(std::random_device()())
 {
     connect(&m_workerThread, SIGNAL(frameUpdated()), this, SLOT(update()));
 
-    m_image.load(m_filename.c_str());
+    m_image.load(m_filename);
     m_currentPixmap = QPixmap::fromImage(m_image);
 }
 
@@ -28,7 +30,7 @@ void CMyMorphWidget::reloadImage()
     stopWorkerThread();
     {
         QMutexLocker imageLocker(&m_imageMutex);
-        m_image.load(m_filename.c_str());
+        m_image.load(m_filename);
         QMutexLocker pixmapLocker(&m_currentPixmapMutex);
         m_currentPixmap = QPixmap::fromImage(m_image);
     }
@@ -67,13 +69,14 @@ void CMyMorphWidget::applyMorph()
     const auto MinColor = std::numeric_limits<decltype(SColor::R)>::min();
     const auto MaxColor = std::numeric_limits<decltype(SColor::R)>::max();
 
-    SColor buf[imgSize.height()][imgSize.width()];
+    std::unique_ptr<SColor[]> buf(new SColor[imgSize.height()*imgSize.width()]);
+
     const auto bufWidth = imgSize.width();
 
     SColor minColors{MaxColor, MaxColor, MaxColor};
     SColor maxColors{MinColor, MinColor, MinColor};
 
-    SColor* pBufScanline = buf[0];
+    SColor* pBufScanline = buf.get();
     for (int y = 0;
             y < imgSize.height();
             ++y, pBufScanline += bufWidth)
@@ -102,7 +105,7 @@ void CMyMorphWidget::applyMorph()
     const auto gScale = 255.f / gSpan;
     const auto bScale = 255.f / bSpan;
 
-    pBufScanline = buf[0];
+    pBufScanline = buf.get();
     auto pNewScanline = reinterpret_cast<QRgb*>(newImage.scanLine(0));
     for (int y = 0, increment = newImage.bytesPerLine() / sizeof(*pNewScanline);
          y < imgSize.height();

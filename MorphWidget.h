@@ -3,6 +3,7 @@
 
 #include "MorphKernel.h"
 #include "MorphKernelCrosscolor.h"
+#include "MorphKernelCrosscolorSplitColor.h"
 
 #include <QWidget>
 #include <QImage>
@@ -59,19 +60,20 @@ protected:
     virtual void paintEvent(QPaintEvent* event) override;
 
 private:
-    constexpr static const float MutationStrength = 0.003f;
+    constexpr static const float MutationStrength = 0.001f;
     constexpr static const bool NormalizeFrame = false; // If true then each frame will be scaled to 0-255 range, otherwise it will be clamped to this range
 
     QImage m_image;
     QMutex m_imageMutex;
 
     //CMyMorphKernel m_kernel;
-    CMyMorphKernelCrosscolor m_kernel;
+    //CMyMorphKernelCrosscolor m_kernel;
+    CMyMorphKernelCrosscolorSplitColor m_kernel;
 
     QPixmap m_currentPixmap;
     QMutex m_currentPixmapMutex;
 
-    std::string m_filename;
+    QString m_filename;
 
     CWorkerThread m_workerThread;
 
