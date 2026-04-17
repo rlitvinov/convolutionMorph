@@ -61,6 +61,10 @@ protected:
     virtual void paintEvent(QPaintEvent* event) override;
 
 private:
+    //typedef CMyMorphKernel TKernel;
+    //typedef CMyMorphKernelCrosscolor TKernel;
+    typedef CMyMorphKernelCrosscolorSplitColor TKernel;
+
     constexpr static const float MutationStrength = 0.001f;
     constexpr static const bool NormalizeFrame = false; // If true then each frame will be scaled to 0-255 range, otherwise it will be clamped to this range
 
@@ -70,12 +74,13 @@ private:
     constexpr static const auto FPSOutlineColor = Qt::red;
     constexpr static const auto FPSRefreshIntervalMSecs = 1000;
 
+    void loadImage();
+    void initImageBorder();
+
     QImage m_image;
     QMutex m_imageMutex;
 
-    //CMyMorphKernel m_kernel;
-    //CMyMorphKernelCrosscolor m_kernel;
-    CMyMorphKernelCrosscolorSplitColor m_kernel;
+    TKernel m_kernel;
 
     QPixmap m_currentPixmap;
     QMutex m_currentPixmapMutex;

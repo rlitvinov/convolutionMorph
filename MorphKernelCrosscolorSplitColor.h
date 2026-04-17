@@ -9,13 +9,18 @@ class CMyMorphKernelCrosscolorSplitColor
 {
     typedef float TMatrixElement;
 
-    static const size_t MatrixSize = 7;
-    static const size_t CrossColorMatrixSize = 5;
+    constexpr static const size_t MatrixSize = 7;
+    constexpr static const size_t CrossColorMatrixSize = 5;
+
     constexpr static const TMatrixElement CrossColorCoupling = 0.5f;
     constexpr static const TMatrixElement MatrixElementMin = -0.1f;
     constexpr static const TMatrixElement MatrixElementMax = 0.1f;
 
     static const int ZeroColor = 127;
+
+    constexpr static const int MatrixCenter = MatrixSize / 2;    
+    constexpr static const int CrossColorMatrixCenter = CrossColorMatrixSize / 2;
+    constexpr static const int RequiredBorder = std::max(MatrixCenter, CrossColorMatrixCenter);
 
     static_assert(MatrixSize % 2 == 1, "MatrixSize must be odd");
     static_assert(CrossColorMatrixSize % 2 == 1, "CrossColorMatrixSize must be odd");
@@ -41,6 +46,8 @@ public:
 
     SRGBColor apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
     QRgb applyWithClamp(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
+
+    constexpr static int getRequiredBorder() { return RequiredBorder; }
 
 private:
     void updateMatrices();

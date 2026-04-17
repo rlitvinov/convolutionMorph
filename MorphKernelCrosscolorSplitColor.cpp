@@ -84,23 +84,11 @@ CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor
         res.B += qBlue(color) - ZeroColor;
     }
 
-    const int MatrixCenter = MatrixSize / 2;
-
     for (int mY = 0; mY < MatrixSize; ++mY)
         for (int mX = 0; mX < MatrixSize; ++mX)
         {
             auto imX = x + mX - MatrixCenter;
             auto imY = y + mY - MatrixCenter;
-
-            if (imX < 0)
-                imX += imageSize.width();
-            else if (imX >= imageSize.width())
-                imX -= imageSize.width();
-
-            if (imY < 0)
-                imY += imageSize.height();
-            else if (imY >= imageSize.height())
-                imY -= imageSize.height();
 
             Q_ASSERT(   (imX >= 0) &&
                         (imY >= 0) &&
@@ -116,23 +104,11 @@ CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor
             res.B += (qBlue(color) - ZeroColor) * coeffB;
         }
 
-    const int CrossColorMatrixCenter = CrossColorMatrixSize / 2;
-
     for (int mY = 0; mY < CrossColorMatrixSize; ++mY)
         for (int mX = 0; mX < CrossColorMatrixSize; ++mX)
         {
             auto imX = x + mX - CrossColorMatrixCenter;
             auto imY = y + mY - CrossColorMatrixCenter;
-
-            if (imX < 0)
-                imX += imageSize.width();
-            else if (imX >= imageSize.width())
-                imX -= imageSize.width();
-
-            if (imY < 0)
-                imY += imageSize.height();
-            else if (imY >= imageSize.height())
-                imY -= imageSize.height();
 
             Q_ASSERT(   (imX >= 0) &&
                         (imY >= 0) &&
@@ -177,7 +153,6 @@ QRgb CMyMorphKernelCrosscolorSplitColor::applyWithClamp(int x, int y, const TSca
 
 void CMyMorphKernelCrosscolorSplitColor::updateMatrices()
 {
-    constexpr int MatrixCenter = MatrixSize / 2;
     for (int y = 0; y < MatrixSize; ++y)
     {
         const auto yCoord = y - MatrixCenter;
@@ -195,7 +170,6 @@ void CMyMorphKernelCrosscolorSplitColor::updateMatrices()
         }
     }
 
-    constexpr int CrossColorMatrixCenter = CrossColorMatrixSize / 2;
     for (int y = 0; y < CrossColorMatrixSize; ++y)
     {
         const auto yCoord = y - CrossColorMatrixCenter;
