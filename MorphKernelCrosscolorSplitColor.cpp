@@ -73,7 +73,7 @@ void CMyMorphKernelCrosscolorSplitColor::mutateMatrix(TMatrixElement strength)
     updateMatrices();
 }
 
-CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor::apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
+CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor::apply(int x, int y, const TScanlinePointers pScanlines)
 {
     SRGBColor res{0.f, 0.f, 0.f};
 
@@ -91,9 +91,7 @@ CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor
             auto imY = y + mY - MatrixCenter;
 
             Q_ASSERT(   (imX >= 0) &&
-                        (imY >= 0) &&
-                        (imX < imageSize.width()) &&
-                        (imY < imageSize.height()) );
+                        (imY >= 0) );
 
             const auto color = pScanlines[imY][imX];
             const auto coeffR = m_matrixRed[mY][mX];
@@ -111,9 +109,7 @@ CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor
             auto imY = y + mY - CrossColorMatrixCenter;
 
             Q_ASSERT(   (imX >= 0) &&
-                        (imY >= 0) &&
-                        (imX < imageSize.width()) &&
-                        (imY < imageSize.height()) );
+                        (imY >= 0) );
 
             const auto color = pScanlines[imY][imX];
             const auto coeffLower = m_crossColorMatrix[mY][mX][0] * CrossColorCoupling;
@@ -138,9 +134,9 @@ CMyMorphKernelCrosscolorSplitColor::SRGBColor CMyMorphKernelCrosscolorSplitColor
     return res;
 }
 
-QRgb CMyMorphKernelCrosscolorSplitColor::applyWithClamp(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
+QRgb CMyMorphKernelCrosscolorSplitColor::applyWithClamp(int x, int y, const TScanlinePointers pScanlines)
 {
-    auto [resR, resG, resB] = apply(x, y, pScanlines, imageSize);
+    auto [resR, resG, resB] = apply(x, y, pScanlines);
 
     resR = std::clamp(resR, 0.f, 255.f);
     resG = std::clamp(resG, 0.f, 255.f);

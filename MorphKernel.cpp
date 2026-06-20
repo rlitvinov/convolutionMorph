@@ -31,20 +31,16 @@ void CMyMorphKernel::mutateMatrix(TMatrixElement strength)
                     [this, &mutationDistrubution](auto& elem){ elem += mutationDistrubution(m_randomEngine); });
 }
 
-QRgb CMyMorphKernel::apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize)
+CMyMorphKernel::SRGBColor CMyMorphKernel::apply(int x, int y, const TScanlinePointers pScanlines)
 {
-    TMatrixElement resR = 0.f;
-    TMatrixElement resG = 0.f;
-    TMatrixElement resB = 0.f;
+    SRGBColor res{0.f, 0.f, 0.f};
 
     {
         const auto color = pScanlines[y][x];
-        resR += qRed(color) - ZeroColor;
-        resG += qGreen(color) - ZeroColor;
-        resB += qBlue(color) - ZeroColor;
+        res.R += qRed(color) - ZeroColor;
+        res.G += qGreen(color) - ZeroColor;
+        res.B += qBlue(color) - ZeroColor;
     }
-
-    const int MatrixCenter = MatrixSize / 2;
 
     for (int mY = 0; mY < MatrixSize; ++mY)
         for (int mX = 0; mX < MatrixSize; ++mX)
@@ -52,32 +48,26 @@ QRgb CMyMorphKernel::apply(int x, int y, const TScanlinePointers pScanlines, con
             auto imX = x + mX - MatrixCenter;
             auto imY = y + mY - MatrixCenter;
 
-            if (imX < 0)
-                imX += imageSize.width();
-            else if (imX >= imageSize.width())
-                imX -= imageSize.width();
-
-            if (imY < 0)
-                imY += imageSize.height();
-            else if (imY >= imageSize.height())
-                imY -= imageSize.height();
-
             Q_ASSERT(   (imX >= 0) &&
-                        (imY >= 0) &&
-                        (imX < imageSize.width()) &&
-                        (imY < imageSize.height()) );
-
+                        (imY >= 0) );
 
             const auto color = pScanlines[imY][imX];
             const auto coeff = m_matrix[mY][mX];
-            resR += (qRed(color) - ZeroColor) * coeff;
-            resG += (qGreen(color) - ZeroColor) * coeff;
-            resB += (qBlue(color) - ZeroColor) * coeff;
+            res.R += (qRed(color) - ZeroColor) * coeff;
+            res.G += (qGreen(color) - ZeroColor) * coeff;
+            res.B += (qBlue(color) - ZeroColor) * coeff;
         }
 
-    resR += ZeroColor;
-    resG += ZeroColor;
-    resB += ZeroColor;
+    res.R += ZeroColor;
+    res.G += ZeroColor;
+    res.B += ZeroColor;
+
+    return res;
+}
+
+QRgb CMyMorphKernel::applyWithClamp(int x, int y, const TScanlinePointers pScanlines)
+{
+    auto [resR, resG, resB] = apply(x, y, pScanlines);
 
     resR = std::clamp(resR, 0.f, 255.f);
     resG = std::clamp(resG, 0.f, 255.f);

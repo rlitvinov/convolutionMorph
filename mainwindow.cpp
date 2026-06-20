@@ -15,22 +15,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::resetButtonClicked()
 {
-    ui->morphWidget->reloadImage();
+    ui->morphWidget->requestImageReload();
 }
 
 void MainWindow::newMatrixButtonClicked()
 {
-    ui->morphWidget->newMatrix();
+    ui->morphWidget->requestMatrixRandomization();
 }
 
 void MainWindow::resetMatrixButtonClicked()
 {
-    ui->morphWidget->resetMatrix();
+    ui->morphWidget->requestMatrixReset();
 }
 
 void MainWindow::mutateMatrixButtonClicked()
 {
-    ui->morphWidget->mutateMatrix();
+    ui->morphWidget->requestMatrixMutation();
 }
 
 void MainWindow::autoMutateCheckboxChanged(int state)
@@ -40,23 +40,23 @@ void MainWindow::autoMutateCheckboxChanged(int state)
 
 void MainWindow::stepButtonClicked()
 {
-    ui->morphWidget->applyMorph();
+    ui->morphWidget->singleStep();
     ui->morphWidget->update();
 }
 
 void MainWindow::playButtonClicked()
 {
-    ui->morphWidget->startWorkerThread();
+    ui->morphWidget->startWorkersManagerThread();
 }
 
 void MainWindow::stopButtonClicked()
 {
-    ui->morphWidget->stopWorkerThread();
+    ui->morphWidget->stopWorkersManagerThread();
 }
 
 void MainWindow::randomizeButtonClicked()
 {
-    ui->morphWidget->randomizeImage();
+    ui->morphWidget->requestImageRandomization();
 }
 
 

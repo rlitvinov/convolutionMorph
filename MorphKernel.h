@@ -15,11 +15,21 @@ class CMyMorphKernel
 
     static const int ZeroColor = 0;
 
+    constexpr static const int MatrixCenter = MatrixSize / 2;
+    constexpr static const int RequiredBorder = MatrixCenter;
+
     static_assert(MatrixSize % 2 == 1, "MatrixSize must be odd");
 
     typedef TMatrixElement TMatrix[MatrixSize][MatrixSize];
 
 public:
+    struct SRGBColor
+    {
+        TMatrixElement R;
+        TMatrixElement G;
+        TMatrixElement B;
+    };
+
     typedef QRgb* TScanlinePointers[];
 
     CMyMorphKernel();
@@ -28,7 +38,10 @@ public:
     void randomizeMatrix();
     void mutateMatrix(TMatrixElement strength);
 
-    QRgb apply(int x, int y, const TScanlinePointers pScanlines, const QSize imageSize);
+    SRGBColor apply(int x, int y, const TScanlinePointers pScanlines);
+    QRgb applyWithClamp(int x, int y, const TScanlinePointers pScanlines);
+
+    constexpr static int getRequiredBorder() { return RequiredBorder; }
 
 private:
     TMatrix m_matrix;

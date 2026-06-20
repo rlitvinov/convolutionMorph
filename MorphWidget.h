@@ -12,18 +12,29 @@
 #include <QThread>
 #include <QTime>
 
+#include <queue>
+
 class CMyMorphWidget;
 
-class CWorkerThread: public QThread
+class CWorkersManagerThread: public QThread
 {
     Q_OBJECT
+
+    typedef QThread TBase;
+
 public:
-    CWorkerThread(CMyMorphWidget* pParentWidget)
-        : m_pParentWidget(pParentWidget)
-        , m_autoMutate(false)
+    typedef std::function<void(size_t)> TWorkFunction;
+
+    CWorkersManagerThread(TWorkFunction workFunction, size_t threadCount = QThread::idealThreadCount())
+        : m_workFunction(workFunction)
+        , m_numThreads(threadCount)
+        , m_feedReady(false)
     {}
 
-    void setAutoMutate(bool mutate) { m_autoMutate = mutate; }
+    void setThreadCount(size_t count) { m_numThreads = count; }
+    void startWorkCycle();
+
+    void requestInterruption();
 
 protected:
     virtual void run() override;
@@ -32,9 +43,14 @@ signals:
     void frameUpdated();
 
 private:
-    CMyMorphWidget* const m_pParentWidget;
-    std::atomic_bool m_autoMutate;
+    TWorkFunction m_workFunction;
+    size_t m_numThreads;
+
+    bool m_feedReady;
+    std::mutex m_feedMutex;
+    std::condition_variable m_feedCV;
 };
+
 
 class CMyMorphWidget: public QWidget
 {
@@ -46,24 +62,43 @@ public:
     explicit CMyMorphWidget(QWidget *parent = nullptr);
     virtual ~CMyMorphWidget();
 
-    void reloadImage();
-    void applyMorph();
-    void newMatrix();
-    void resetMatrix();
-    void mutateMatrixInternal();
-    void mutateMatrix();
+    void singleStep(); // displays next frame only if the WorkerMaanger thread is not running
+    void requestImageReload();
+    void requestMatrixRandomization();
+    void requestMatrixReset();
+    void requestMatrixMutation();
+    void requestImageRandomization();
+
     void setAutoMutateMatrix(bool mutate);
+
     void randomizeImage();
-    void startWorkerThread();
-    void stopWorkerThread();
+
+    void startWorkersManagerThread();
+    void stopWorkersManagerThread();
 
 protected:
     virtual void paintEvent(QPaintEvent* event) override;
+
+private slots:
+    void frameDataReady();
 
 private:
     //typedef CMyMorphKernel TKernel;
     //typedef CMyMorphKernelCrosscolor TKernel;
     typedef CMyMorphKernelCrosscolorSplitColor TKernel;
+    typedef TKernel::SRGBColor SColor;
+
+    struct SNextFrameComputationSlot
+    {
+        // input params
+        QPoint m_source;
+        QPoint m_destination;
+        QSize m_size;
+
+        // output values
+        SColor m_minimums;
+        SColor m_maximums;
+    };
 
     constexpr static const float MutationStrength = 0.001f;
     constexpr static const bool NormalizeFrame = false; // If true then each frame will be scaled to 0-255 range, otherwise it will be clamped to this range
@@ -76,18 +111,25 @@ private:
 
     void loadImage();
     void initImageBorder();
+    void refreshScanlinesForNewImage();
+    void prepareComputationalSlots();
+    void computeNextFrameData(size_t slot);
+    void applyNextFrameData();
+    void requestOperation(std::function<void(void)> operation, bool updateNeeded = false);
+    void processDeferredOperations();
 
     QImage m_image;
-    QMutex m_imageMutex;
+    std::unique_ptr<QRgb*[]> m_spImageScanlines;
+
+    std::unique_ptr<SColor[]> m_spNextFrameData;
+    QSize m_nextFrameDataSize;
+    std::vector<SNextFrameComputationSlot> m_nextFrameComputationSlots;
 
     TKernel m_kernel;
 
-    QPixmap m_currentPixmap;
-    QMutex m_currentPixmapMutex;
-
     QString m_filename;
 
-    CWorkerThread m_workerThread;
+    CWorkersManagerThread m_workersManagerThread;
 
     std::mt19937 m_randomEngine;
     std::uniform_int_distribution<unsigned short> m_randomDistrubution;
@@ -95,6 +137,9 @@ private:
     QTime m_fpsTimeStamp;
     int m_framesSinceTimeStamp = 0;
     QString m_fps;
+
+    std::queue<std::function<void(void)>> m_deferredOperationsQueue;
+    bool m_autoMutate = false;
 };
 
 #endif // MORPHWIDGET_H
