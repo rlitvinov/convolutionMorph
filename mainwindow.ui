@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>907</width>
+    <width>1095</width>
     <height>679</height>
    </rect>
   </property>
@@ -21,14 +21,21 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="resetButton">
+       <widget class="QPushButton" name="openImageButton">
+        <property name="text">
+         <string>Open image</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="resetImageButton">
         <property name="text">
          <string>Reset image</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="randomizeButton">
+       <widget class="QPushButton" name="randomizeImageButton">
         <property name="text">
          <string>Randomize image</string>
         </property>
@@ -65,6 +72,9 @@
        <widget class="QCheckBox" name="autoMutateCheckBox">
         <property name="text">
          <string>AutoMutate</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -111,7 +121,7 @@
    <slot>newMatrixButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>607</x>
+     <x>517</x>
      <y>668</y>
     </hint>
     <hint type="destinationlabel">
@@ -127,7 +137,7 @@
    <slot>stepButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>659</x>
+     <x>912</x>
      <y>668</y>
     </hint>
     <hint type="destinationlabel">
@@ -137,14 +147,14 @@
    </hints>
   </connection>
   <connection>
-   <sender>resetButton</sender>
+   <sender>resetImageButton</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
-   <slot>resetButtonClicked()</slot>
+   <slot>resetImageButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>89</x>
-     <y>655</y>
+     <x>201</x>
+     <y>668</y>
     </hint>
     <hint type="destinationlabel">
      <x>114</x>
@@ -159,7 +169,7 @@
    <slot>playButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>761</x>
+     <x>998</x>
      <y>668</y>
     </hint>
     <hint type="destinationlabel">
@@ -175,8 +185,8 @@
    <slot>stopButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>823</x>
-     <y>656</y>
+     <x>1084</x>
+     <y>668</y>
     </hint>
     <hint type="destinationlabel">
      <x>901</x>
@@ -185,7 +195,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>randomizeButton</sender>
+   <sender>randomizeImageButton</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
    <slot>randomizeButtonClicked()</slot>
@@ -207,8 +217,8 @@
    <slot>mutateMatrixButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>370</x>
-     <y>647</y>
+     <x>621</x>
+     <y>668</y>
     </hint>
     <hint type="destinationlabel">
      <x>394</x>
@@ -223,8 +233,8 @@
    <slot>autoMutateCheckboxChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>515</x>
-     <y>665</y>
+     <x>724</x>
+     <y>666</y>
     </hint>
     <hint type="destinationlabel">
      <x>467</x>
@@ -239,8 +249,8 @@
    <slot>resetMatrixButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>275</x>
-     <y>657</y>
+     <x>414</x>
+     <y>668</y>
     </hint>
     <hint type="destinationlabel">
      <x>296</x>
@@ -248,16 +258,33 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>openImageButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openImageButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>34</x>
+     <y>650</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>638</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>stepButtonClicked()</slot>
   <slot>newMatrixButtonClicked()</slot>
-  <slot>resetButtonClicked()</slot>
+  <slot>resetImageButtonClicked()</slot>
   <slot>playButtonClicked()</slot>
   <slot>stopButtonClicked()</slot>
   <slot>randomizeButtonClicked()</slot>
   <slot>mutateMatrixButtonClicked()</slot>
   <slot>autoMutateCheckboxChanged(int)</slot>
   <slot>resetMatrixButtonClicked()</slot>
+  <slot>openImageButtonClicked()</slot>
  </slots>
 </ui>

@@ -1,11 +1,15 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+#include <QFileDialog>
+#include <QImageReader>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->morphWidget->setAutoMutateMatrix(ui->autoMutateCheckBox->checkState() == Qt::CheckState::Checked);
 }
 
 MainWindow::~MainWindow()
@@ -13,7 +17,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::resetButtonClicked()
+void MainWindow::openImageButtonClicked()
+{
+    using namespace Qt::StringLiterals;
+
+    const auto supportedImageFormats = QImageReader::supportedImageFormats();
+
+    QString filter(u"Image Files("_s);
+    for (auto &format: supportedImageFormats)
+    {
+        filter += u"*."_s + format + u" "_s;
+    }
+    filter += u")"_s;
+
+    auto filename = QFileDialog::getOpenFileName(this, tr("Open Image"), QString(), filter);
+    if (!filename.isNull())
+        ui->morphWidget->requestNewImage(filename);
+}
+
+void MainWindow::resetImageButtonClicked()
 {
     ui->morphWidget->requestImageReload();
 }

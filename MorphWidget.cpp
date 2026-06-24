@@ -40,6 +40,12 @@ void CMyMorphWidget::singleStep()
     applyNextFrameData();
 }
 
+void CMyMorphWidget::requestNewImage(QString filename)
+{
+    m_filename = filename;
+    requestImageReload();
+}
+
 void CMyMorphWidget::requestImageReload()
 {
     requestOperation(std::bind(&CMyMorphWidget::loadImage, this), true);
@@ -105,6 +111,10 @@ void CMyMorphWidget::stopWorkersManagerThread()
     m_workersManagerThread.requestInterruption();
     m_workersManagerThread.wait();
     Q_ASSERT(!m_workersManagerThread.isRunning());
+
+    m_fpsTimeStamp = decltype(m_fpsTimeStamp)();
+    m_fps.clear();
+
     processDeferredOperations();
 }
 
@@ -116,7 +126,13 @@ void CMyMorphWidget::paintEvent(QPaintEvent* e)
         const auto imgSize = m_image.size();
         constexpr const auto borderWidth = TKernel::getRequiredBorder();
         const auto processedSize = imgSize - QSize(2 * borderWidth, 2 * borderWidth);
-        painter.drawImage(QRect(0, 0, processedSize.width() * 2, processedSize.height() * 2),
+        const auto scale = std::min(static_cast<float>(width()) / processedSize.width(),
+                                    static_cast<float>(height()) / processedSize.height());
+        const auto destSize = processedSize * scale;
+        const auto destOffsetSize = (size() - destSize) / 2;
+        const QPoint destOffset(destOffsetSize.width(), destOffsetSize.height());
+
+        painter.drawImage(QRect(destOffset, destSize),
                           m_image,
                           QRect(borderWidth, borderWidth, processedSize.width(), processedSize.height()));
     }
@@ -131,10 +147,23 @@ void CMyMorphWidget::paintEvent(QPaintEvent* e)
         painter.setBrush(FPSTextColor);
         painter.drawPath(path);
     }
+}
+
+void CMyMorphWidget::frameDataReady() // when this slot is called, other threads (WorkersManager and Workers) are
+{                                     // waiting for new data until m_workersManagerThread.startWorkCycle() is called
+    applyNextFrameData();
+
+    if (m_autoMutate)
+        m_kernel.mutateMatrix(MutationStrength);
+
+    processDeferredOperations();
+
+    m_workersManagerThread.startWorkCycle();
 
     if (const auto curTime = QTime::currentTime(); m_fpsTimeStamp.isNull())
     {
         m_fpsTimeStamp = curTime;
+        m_framesSinceTimeStamp = 0;
     }
     else
     {
@@ -149,25 +178,12 @@ void CMyMorphWidget::paintEvent(QPaintEvent* e)
     }
 
     ++m_framesSinceTimeStamp;
-}
-
-void CMyMorphWidget::frameDataReady() // when this slot is called, other threads (WorkersManager and Workers) are
-{                                     // waiting for new data until m_workersManagerThread.startWorkCycle() is called
-    applyNextFrameData();
-
-    if (m_autoMutate)
-        m_kernel.mutateMatrix(MutationStrength);
-
-    processDeferredOperations();
-
-    m_workersManagerThread.startWorkCycle();
 
     update();
 }
 
 void CMyMorphWidget::loadImage()
 {
-    Q_ASSERT(!m_workersManagerThread.isRunning());
     QImage newImage;
     newImage.load(m_filename);
 
@@ -238,8 +254,6 @@ void CMyMorphWidget::refreshScanlinesForNewImage()
 
 void CMyMorphWidget::prepareComputationalSlots()
 {
-    Q_ASSERT(!m_workersManagerThread.isRunning());
-
     constexpr const auto borderWidth = TKernel::getRequiredBorder();
     const auto imgSize = m_image.size();
     const auto processedSize = imgSize - QSize(2 * borderWidth, 2 * borderWidth);
@@ -455,6 +469,12 @@ void CMyMorphWidget::processDeferredOperations()
 }
 
 
+
+void CWorkersManagerThread::setThreadCount(size_t count)
+{
+    Q_ASSERT((m_numThreads == count) || !isRunning());
+    m_numThreads = count;
+}
 
 void CWorkersManagerThread::startWorkCycle()
 {

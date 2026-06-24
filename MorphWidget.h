@@ -31,7 +31,7 @@ public:
         , m_feedReady(false)
     {}
 
-    void setThreadCount(size_t count) { m_numThreads = count; }
+    void setThreadCount(size_t count);
     void startWorkCycle();
 
     void requestInterruption();
@@ -63,6 +63,7 @@ public:
     virtual ~CMyMorphWidget();
 
     void singleStep(); // displays next frame only if the WorkerMaanger thread is not running
+    void requestNewImage(QString filename);
     void requestImageReload();
     void requestMatrixRandomization();
     void requestMatrixReset();

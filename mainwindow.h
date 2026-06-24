@@ -18,7 +18,8 @@ public:
     virtual ~MainWindow();
 
 private slots:
-    void resetButtonClicked();
+    void openImageButtonClicked();
+    void resetImageButtonClicked();
     void newMatrixButtonClicked();
     void resetMatrixButtonClicked();
     void mutateMatrixButtonClicked();
